@@ -14,5 +14,7 @@ test:
 	PYTHONPATH=src uv run pytest tests/
 
 clean:
-	rm -rf __pycache__ .ruff_cache
-	uv run ruff check --fix . 
+	find . -type d -name '__pycache__' -exec rm -rf {} +
+
+real-clean: clean
+	git clean -fdx
