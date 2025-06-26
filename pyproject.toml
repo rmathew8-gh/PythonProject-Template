@@ -1,0 +1,17 @@
+[project]
+name = "python_project_template"
+version = "0.1.0"
+description = "A starter template for modern Python projects."
+authors = [
+    { name = "Your Name", email = "your@email.com" }
+]
+requires-python = ">=3.8"
+dependencies = [
+    "pytest",
+    "ruff"
+]
+
+[tool.uv]
+
+[tool.setuptools.packages.find]
+where = ["src"] 

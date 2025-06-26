@@ -1,0 +1,44 @@
+#+setupfile: ~/.org-mode-goodies/setup.org
+
+* Python Project Starter Template
+
+A modern Python project template with best practices: =uv= for dependency management, =pytest= for testing, =ruff= for linting, and a clean src/tests layout.
+
+* Quickstart
+
+#+BEGIN_SRC shell
+git clone <repo-url>
+cd PythonProject.Template.1
+make install
+make lint
+make test
+make run
+#+END_SRC
+
+* Project Structure
+
+#+BEGIN_EXAMPLE
+PythonProject.Template.1/
+├── .gitignore
+├── Makefile
+├── pyproject.toml
+├── README.md
+├── src/
+│   └── math_example.py
+└── tests/
+    └── test_math_example.py
+#+END_EXAMPLE
+
+* Usage
+- =make install= — Install dependencies
+- =make lint= — Lint code with ruff
+- =make test= — Run tests with pytest
+- =make run= — Run the example script
+- =make clean= — Clean up cache and auto-fix lint
+
+* Requirements
+- Python 3.8+
+- [[https://github.com/astral-sh/uv][uv]] (for fast dependency management)
+
+* Example
+See =src/math_example.py= and =tests/test_math_example.py= for a minimal math function and its test.
