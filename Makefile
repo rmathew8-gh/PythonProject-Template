@@ -11,7 +11,7 @@ lint:
 	uv run ruff check --fix .
 
 test:
-	PYTHONPATH=src uv run pytest tests/
+	uv run pytest tests/
 
 clean:
 	find . -type d -name '__pycache__' -exec rm -rf {} +
