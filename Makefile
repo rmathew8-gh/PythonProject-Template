@@ -8,6 +8,7 @@ run:
 	uv run python src/math_example.py
 
 lint:
+	uv run ruff format .
 	uv run ruff check --fix .
 
 test:
