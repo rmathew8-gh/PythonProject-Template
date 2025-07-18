@@ -1,18 +1,21 @@
 # Makefile for Python starter template
 
+UV_RUN = uv run --quiet
+
 install:
-	uv venv
-	uv pip install -e .
+	uv venv --quiet
+	uv sync --quiet
+	$(UV_RUN) pip install -e .
 
 run:
-	uv run python src/example.py
+	$(UV_RUN) python src/example.py
 
 lint:
-	uv run ruff format .
-	uv run ruff check --fix .
+	$(UV_RUN) ruff format .
+	$(UV_RUN) ruff check --fix .
 
 test:
-	uv run pytest tests/
+	$(UV_RUN) pytest tests/
 
 clean:
 	find . -type d -name '__pycache__' -exec rm -rf {} +
