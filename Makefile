@@ -1,5 +1,7 @@
 # Makefile for Python starter template
 
+.PHONY: install run lint test clean real-clean
+
 UV_RUN = uv run --quiet
 
 install:

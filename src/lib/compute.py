@@ -1,3 +1,11 @@
-def add(a, b):
+from pydantic import BaseModel
+
+
+class AddRequest(BaseModel):
+    a: int
+    b: int
+
+
+def add(req: AddRequest) -> int:
     """Return the sum of a and b."""
-    return a + b
+    return req.a + req.b
