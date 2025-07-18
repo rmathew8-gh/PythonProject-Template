@@ -2,17 +2,13 @@
 
 * Python Project Starter Template
 
-A modern Python project template with best practices: =uv= for dependency management, =pytest= for testing, =ruff= for linting, and a clean src/tests layout.
+A modern Python project template with best practices: =uv= for dependency management, =pytest= for
+testing, =ruff= for linting, and a clean src/tests layout.
 
 * Quickstart
 
 #+BEGIN_SRC shell
-git clone <repo-url>
-cd PythonProject.Template.1
-make install
-make lint
-make test
-make run
+  git clone <repo-url> cd PythonProject.Template.1 make install make lint make test make run
 #+END_SRC
 
 * Project Structure
@@ -24,9 +20,9 @@ PythonProject.Template.1/
 ├── pyproject.toml
 ├── README.md
 ├── src/
-│   └── math_example.py
+│   └── example.py
 └── tests/
-    └── test_math_example.py
+    └── test_example.py
 #+END_EXAMPLE
 
 * Usage
@@ -41,4 +37,26 @@ PythonProject.Template.1/
 - [[https://github.com/astral-sh/uv][uv]] (for fast dependency management)
 
 * Example
-See =src/math_example.py= and =tests/test_math_example.py= for a minimal math function and its test.
+See =src/example.py= and =tests/test_example.py= for a minimal math function and its test.
+
+* Understanding the 'src' Layout
+
+This project uses a =src= layout, a modern best practice for structuring Python projects. The
+configuration for this is in =pyproject.toml=:
+
+#+BEGIN_SRC toml
+  [tool.setuptools.packages.find] where = ["src"]
+#+END_SRC
+
+Here’s what this means for development:
+
+- *Packaging*: It tells the build system to find all your Python packages inside the =src/=
+  directory. This ensures a clean separation between your source code and other project files (like
+  tests and documentation).
+
+- *Imports*: Because the code is in =src/=, the project must be installed in "editable mode" for imports
+  to work correctly during development. The =make install= command handles this for you by running =uv
+  pip install -e .=.
+
+- *Consistency*: This setup guarantees that the code you run and test is the same code that gets
+  packaged for distribution, preventing many common import-related bugs.

@@ -1,4 +1,4 @@
-from math_example import add
+from example import add
 
 
 def test_add():
