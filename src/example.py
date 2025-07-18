@@ -1,4 +1,3 @@
-from pydantic import BaseModel, ValidationError
 from lib.compute import add, AddRequest
 
 if __name__ == "__main__":
