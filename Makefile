@@ -5,7 +5,7 @@
 UV_RUN = uv run --quiet
 
 install:
-	uv venv --quiet
+	uv venv --quiet --clear
 	uv sync --quiet
 	$(UV_RUN) pip install -e .
 
