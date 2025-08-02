@@ -7,10 +7,14 @@ authors = [
 ]
 # requires-python = ">=3.8"
 dependencies = [
-    "pytest",
-    "ruff",
     "pip",
     "pydantic"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "ruff"
 ]
 
 [tool.uv]

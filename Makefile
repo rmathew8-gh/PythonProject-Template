@@ -1,13 +1,18 @@
 # Makefile for Python starter template
 
-.PHONY: install run lint test clean real-clean
+.PHONY: install install-dev run lint test clean real-clean
 
 UV_RUN = uv run --quiet
+
+install-prod:
+	uv venv --quiet --clear
+	uv sync --quiet
+	$(UV_RUN) pip install -e .
 
 install:
 	uv venv --quiet --clear
 	uv sync --quiet
-	$(UV_RUN) pip install -e .
+	$(UV_RUN) pip install -e ".[dev]"
 
 run:
 	$(UV_RUN) python src/example.py
