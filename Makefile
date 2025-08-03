@@ -4,15 +4,15 @@
 
 UV_RUN = uv run --quiet
 
-install-prod:
-	uv venv --quiet --clear
-	uv sync --quiet
-	$(UV_RUN) pip install -e .
-
 install:
 	uv venv --quiet --clear
 	uv sync --quiet
 	$(UV_RUN) pip install -e ".[dev]"
+
+install-prod:
+	uv venv --quiet --clear
+	uv sync --quiet
+	$(UV_RUN) pip install -e .
 
 run:
 	$(UV_RUN) python src/example.py
