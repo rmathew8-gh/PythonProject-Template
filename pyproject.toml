@@ -23,7 +23,7 @@ dev = [
 where = ["src"] 
 
 [tool.ruff]
-line-length = 120
+line-length = 100
 indent-width = 4
 target-version = "py38"
 exclude = [
@@ -33,4 +33,7 @@ exclude = [
 [tool.ruff.lint]
 select = ["E", "F", "W291", "W293"]
 fixable = ["ALL"]
+
+[tool.ruff.format]
+line-length = 100
 
