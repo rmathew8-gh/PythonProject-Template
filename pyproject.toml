@@ -34,7 +34,3 @@ exclude = [
 [tool.ruff.lint]
 select = ["E", "F", "W291", "W293"]
 fixable = ["ALL"]
-
-[tool.ruff.format]
-line-length = 100
-
