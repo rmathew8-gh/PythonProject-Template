@@ -1,6 +1,7 @@
 [project]
 name = "python_project_template"
 version = "0.1.0"
+requires-python = ">=3.13"
 description = "A starter template for modern Python projects."
 authors = [
     { name = "Your Name", email = "your@email.com" }
