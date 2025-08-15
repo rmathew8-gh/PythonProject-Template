@@ -18,11 +18,10 @@ run:
 	$(UV_RUN) python src/example.py
 
 lint:
-	$(UV_RUN) ruff check --select W291,W292,W293 --fix .
-	$(UV_RUN) ruff format .
 	$(UV_RUN) ruff check --fix .
+	$(UV_RUN) ruff format .
 
-test:
+test: lint
 	$(UV_RUN) pytest tests/
 
 clean:

@@ -1,6 +1,7 @@
 import pytest
 from pydantic import ValidationError
-from lib.compute import add, AddRequest
+
+from lib.compute import AddRequest, add
 
 
 def test_add():
