@@ -46,8 +46,6 @@ unfixable = []
 [tool.ruff]
 line-length = 120
 indent-width = 4
-select = ["E", "F"]  # Include E for pycodestyle errors, including E501
-ignore = []          # Ensure E501 is not ignored
 
 [tool.ruff.lint]
 select = [
@@ -59,3 +57,4 @@ select = [
     "C4", # flake8-comprehensions
     "UP", # pyupgrade
 ]
+ignore = []          # Ensure E501 is not ignored
