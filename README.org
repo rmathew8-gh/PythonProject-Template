@@ -1,5 +1,14 @@
 #+setupfile: ~/.org-mode-goodies/setup.org
 
+* Useful
+** compile buffers
+#+begin_src elisp :results silent
+(roy/compile-and-rename "install")
+(roy/compile-and-rename "lint")
+(roy/compile-and-rename "test")
+(roy/compile-and-rename "dev")
+#+end_src
+
 * Python Project Starter Template
 
 A modern Python project template with best practices: =uv= for dependency management, =pytest= for
@@ -31,7 +40,6 @@ PythonProject.Template.1/
 - =make test= — Run tests with pytest
 - =make run= — Run the example script
 - =make clean= — Clean up cache and auto-fix lint
-
 * Requirements
 - Python 3.8+
 - [[https://github.com/astral-sh/uv][uv]] (for fast dependency management)
