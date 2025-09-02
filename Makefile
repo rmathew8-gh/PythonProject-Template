@@ -18,7 +18,7 @@ run:
 	$(UV_RUN) python src/example.py
 
 lint:
-	$(UV_RUN) ruff check --fix .
+	$(UV_RUN) ruff check --unsafe-fixes --fix .
 	$(UV_RUN) ruff format .
 
 test: lint
