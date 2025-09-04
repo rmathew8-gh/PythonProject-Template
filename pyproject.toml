@@ -9,7 +9,7 @@ requires-python = ">=3.13"
 description = "A starter template for modern Python projects."
 readme = {file = "README.org", content-type = "text/plain"}
 authors = [
-    { name = "Your Name", email = "your@email.com" }
+    { name = "Roy Mathew", email = "rmathew8@gmail.com" }
 ]
 dependencies = [
     "pip",
