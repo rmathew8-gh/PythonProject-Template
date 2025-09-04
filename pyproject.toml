@@ -11,7 +11,6 @@ readme = {file = "README.org", content-type = "text/plain"}
 authors = [
     { name = "Your Name", email = "your@email.com" }
 ]
-# requires-python = ">=3.8"
 dependencies = [
     "pip",
     "pydantic"
@@ -20,7 +19,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest",
-    "python-lsp-server[all]",
+    "python-lsp-server",
     "python-lsp-ruff",
     "ruff"
 ]
