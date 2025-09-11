@@ -19,7 +19,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest",
-    "python-lsp-server",
+    "python-lsp-server[all]",
     "python-lsp-ruff",
     "ruff"
 ]
