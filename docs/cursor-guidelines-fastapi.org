@@ -1,0 +1,717 @@
+#+setupfile: ~/.org-mode-goodies/setup.org
+
+* Cursor Guidelines for Well-Structured Python Projects
+Based on analysis of the Agno-2.Trials project, these guidelines capture
+best practices for building maintainable, testable, and scalable Python
+applications.
+
+** Project Structure & Organization
+*** Directory Layout
+#+begin_example
+project_root/
+├── src/                          # Source code (not package root)
+│   ├── module_name/              # Feature-based modules
+│   │   ├── __init__.py          # Module initialization
+│   │   ├── core/                # Core business logic
+│   │   ├── models.py            # Pydantic models
+│   │   ├── protocols.py         # Protocol definitions
+│   │   └── routes/              # API routes (if web app)
+│   ├── config/                  # Configuration management
+│   ├── utils/                   # Shared utilities
+│   └── web/                     # Web application layer
+├── tests/                       # Test suite
+│   ├── conftest.py             # Shared test fixtures
+│   ├── fixtures/               # Test implementations
+│   └── module_name/            # Module-specific tests
+├── docs/                       # Documentation
+├── data/                       # Data files
+├── logs/                       # Log files
+├── pyproject.toml              # Project configuration
+├── Makefile                    # Development commands
+├── pytest.ini                 # Test configuration
+├── example.env                 # Environment template
+└── README.org                  # Project documentation
+#+end_example
+
+*** Key Principles
+- *Feature-based organization*: Group related functionality together
+- *Separation of concerns*: Clear boundaries between layers
+- *Dependency injection*: Use protocols and DI containers
+- *Configuration management*: Centralized config with environment
+  variables
+
+** Configuration Management
+*** pyproject.toml Structure
+#+begin_src toml
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "project-name"
+version = "0.1.0"
+description = "Project description"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi",
+    "pydantic>=2.0.0",
+    "uvicorn",
+    # ... other dependencies
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "ruff",
+    "pytest-cov",
+    "httpx",
+]
+
+[tool.ruff]
+target-version = "py38"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "B", "C4", "UP"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.1",
+    "ruff>=0.12.10",
+    "httpx",
+    "pytest-asyncio>=1.1.0",
+]
+#+end_src
+
+*** Environment Configuration
+#+begin_src python
+# example.env
+# Copy to .env and modify values
+
+# Core Configuration
+API_HOST=127.0.0.1
+API_PORT=8030
+DEBUG=false
+
+# Database Configuration
+DATABASE_URL=postgresql://user:pass@localhost/db
+DATABASE_POOL_SIZE=10
+
+# External Services
+EXTERNAL_API_URL=https://api.example.com
+API_KEY=your-api-key-here
+
+# Feature Flags
+ENABLE_FEATURE_X=true
+ENABLE_FEATURE_Y=false
+#+end_src
+
+** Code Organization Patterns
+*** Protocol-Based Architecture
+#+begin_src python
+# protocols.py
+from typing import Protocol, runtime_checkable
+
+@runtime_checkable
+class ServiceProtocol(Protocol):
+    """Protocol for service implementations."""
+    
+    async def process_request(self, data: dict) -> dict:
+        """Process a request and return response."""
+        ...
+
+@runtime_checkable
+class DataProviderProtocol(Protocol):
+    """Protocol for data providers."""
+    
+    def get_data(self, key: str) -> Any:
+        """Get data by key."""
+        ...
+    
+    def save_data(self, key: str, data: Any) -> None:
+        """Save data with key."""
+        ...
+#+end_src
+
+*** Pydantic Models
+#+begin_src python
+# models.py
+from enum import Enum
+from typing import Any, Optional
+from pydantic import BaseModel, Field
+
+class Status(str, Enum):
+    """Status enumeration."""
+    PENDING = "pending"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+class BaseRequest(BaseModel):
+    """Base request model with common fields."""
+    
+    context: Optional[dict[str, Any]] = Field(default=None, description="Additional context")
+    user_id: Optional[str] = Field(default=None, description="User ID for context")
+
+class ServiceRequest(BaseRequest):
+    """Service-specific request model."""
+    
+    data: dict[str, Any] = Field(description="Request data")
+    timeout: int = Field(default=30, ge=5, le=300, description="Request timeout")
+
+class ServiceResponse(BaseModel):
+    """Service response model."""
+    
+    success: bool = Field(description="Whether the request was successful")
+    data: Optional[dict[str, Any]] = Field(default=None, description="Response data")
+    error: Optional[str] = Field(default=None, description="Error message if failed")
+    status: Status = Field(description="Current status")
+#+end_src
+
+*** Dependency Injection Container
+#+begin_src python
+# di_container.py
+from typing import Any, Type, TypeVar, get_type_hints
+from fastapi import Depends
+
+T = TypeVar('T')
+
+class DIContainer:
+    """Dependency Injection Container for Protocol-based services."""
+    
+    def __init__(self):
+        self._services: dict[Type, Any] = {}
+        self._singletons: dict[Type, Any] = {}
+        self._initialized = False
+    
+    def register_singleton(self, interface: Type[T], implementation: Type[T]) -> None:
+        """Register a singleton service implementation."""
+        self._services[interface] = implementation
+    
+    def get(self, interface: Type[T]) -> T:
+        """Get a service instance by interface type."""
+        if interface not in self._services:
+            raise ValueError(f"Service {interface.__name__} not registered")
+        
+        # For singletons, return cached instance
+        if interface in self._singletons:
+            return self._singletons[interface]
+        
+        implementation = self._services[interface]
+        instance = self._create_instance(implementation)
+        
+        # Cache singleton instances
+        if hasattr(implementation, '_is_singleton') and implementation._is_singleton:
+            self._singletons[interface] = instance
+        
+        return instance
+    
+    def _create_instance(self, implementation: Type[T]) -> T:
+        """Create an instance with dependency injection."""
+        hints = get_type_hints(implementation.__init__)
+        kwargs = {}
+        for param_name, param_type in hints.items():
+            if param_name == 'return':
+                continue
+            if param_type in self._services:
+                kwargs[param_name] = self.get(param_type)
+        
+        return implementation(**kwargs)
+
+# Global DI container
+_container = DIContainer()
+
+def configure_di_container() -> None:
+    """Configure the DI container with all service registrations."""
+    if _container._initialized:
+        return
+    
+    # Register services as singletons
+    _container.register_singleton(ServiceProtocol, ServiceImplementation)
+    _container.register_singleton(DataProviderProtocol, DataProviderImplementation)
+    
+    _container._initialized = True
+
+# Dependency provider functions
+def get_service() -> ServiceProtocol:
+    """Get the service implementation."""
+    configure_di_container()
+    return _container.get(ServiceProtocol)
+
+# FastAPI dependency annotations
+ServiceDep = Depends(get_service)
+#+end_src
+
+** Logging & Monitoring
+*** Structured Logging
+#+begin_src python
+# logging.py
+import json
+import logging
+import os
+from typing import Any
+
+class JSONFormatter(logging.Formatter):
+    """Custom formatter for structured JSON logging."""
+    
+    def format(self, record: logging.LogRecord) -> str:
+        """Format log record as JSON."""
+        log_entry = {
+            "timestamp": self.formatTime(record),
+            "level": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+        }
+        
+        # Add extra fields if they exist
+        if hasattr(record, 'extra_data'):
+            log_entry.update(record.extra_data)
+        
+        return json.dumps(log_entry, default=str)
+
+def get_logger(name: str) -> logging.Logger:
+    """Get a logger with structured JSON formatting."""
+    logger = logging.getLogger(name)
+    if not logger.handlers:
+        logger.setLevel(logging.INFO)
+        
+        # Console handler with JSON formatting
+        handler = logging.StreamHandler()
+        handler.setFormatter(JSONFormatter())
+        logger.addHandler(handler)
+        
+        # Prevent duplicate logs
+        logger.propagate = False
+    
+    return logger
+
+def get_file_logger(name: str, log_file: str) -> logging.Logger:
+    """Get a logger that writes to a specific file."""
+    logger = logging.getLogger(f"{name}.file")
+    if not logger.handlers:
+        logger.setLevel(logging.INFO)
+        
+        # Ensure logs directory exists
+        os.makedirs("logs", exist_ok=True)
+        
+        # File handler with JSON formatting
+        handler = logging.FileHandler(f"logs/{log_file}")
+        handler.setFormatter(JSONFormatter())
+        logger.addHandler(handler)
+        
+        # Prevent duplicate logs
+        logger.propagate = False
+    
+    return logger
+#+end_src
+
+** Testing Patterns
+*** Test Configuration
+#+begin_src python
+# conftest.py
+from unittest.mock import MagicMock, patch
+import pytest
+from fastapi.testclient import TestClient
+
+from web.app import app
+from tests.fixtures.test_providers import TestServiceProvider
+
+@pytest.fixture(autouse=True)
+def override_dependencies():
+    """Override all dependencies with test implementations."""
+    # Create test implementations
+    test_service = TestServiceProvider()
+    
+    # Override dependencies
+    app.dependency_overrides[get_service] = lambda: test_service
+    
+    yield {
+        "service": test_service,
+    }
+    
+    # Cleanup
+    app.dependency_overrides.clear()
+
+@pytest.fixture(autouse=True)
+def mock_external_apis():
+    """Mock external APIs to avoid real API calls during tests."""
+    with patch("external.api.Client") as mock_client:
+        mock_client.return_value = MagicMock()
+        yield {"client": mock_client}
+
+@pytest.fixture
+def client():
+    """Create a test client for the FastAPI app."""
+    return TestClient(app)
+
+def assert_json_response(response, status_code=200):
+    """Assert that the response is valid JSON with expected status code."""
+    assert response.status_code == status_code
+    assert "application/json" in response.headers["content-type"]
+    return response.json()
+#+end_src
+
+*** Test Implementations
+#+begin_src python
+# fixtures/test_providers.py
+from typing import Any, Dict, List
+from unittest.mock import Mock
+
+from src.protocols import ServiceProtocol, DataProviderProtocol
+
+class TestServiceProvider:
+    """Test implementation of ServiceProtocol."""
+    
+    def __init__(self):
+        self.processed_requests: List[Dict[str, Any]] = []
+        self.responses: Dict[str, Any] = {}
+    
+    async def process_request(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Process a test request."""
+        self.processed_requests.append(data)
+        
+        # Return configured response or default
+        request_id = data.get("id", "default")
+        if request_id in self.responses:
+            return self.responses[request_id]
+        
+        return {
+            "success": True,
+            "data": {"processed": True, "request_id": request_id},
+            "status": "completed"
+        }
+    
+    def set_response(self, request_id: str, response: Dict[str, Any]) -> None:
+        """Set response for a specific request ID."""
+        self.responses[request_id] = response
+
+class TestDataProvider:
+    """Test implementation of DataProviderProtocol."""
+    
+    def __init__(self):
+        self.data: Dict[str, Any] = {}
+    
+    def get_data(self, key: str) -> Any:
+        """Get test data by key."""
+        return self.data.get(key)
+    
+    def save_data(self, key: str, data: Any) -> None:
+        """Save test data with key."""
+        self.data[key] = data
+#+end_src
+
+*** Test Structure
+#+begin_src python
+# test_service.py
+import pytest
+from tests.fixtures.test_providers import TestServiceProvider
+
+class TestService:
+    """Test the service implementation."""
+    
+    def test_service_initialization(self):
+        """Test service initializes correctly with DI."""
+        test_service = TestServiceProvider()
+        assert test_service is not None
+        assert len(test_service.processed_requests) == 0
+    
+    @pytest.mark.asyncio
+    async def test_process_request_success(self):
+        """Test successful request processing."""
+        test_service = TestServiceProvider()
+        
+        request_data = {"id": "test_123", "data": "test_data"}
+        response = await test_service.process_request(request_data)
+        
+        assert response["success"] is True
+        assert response["data"]["processed"] is True
+        assert response["data"]["request_id"] == "test_123"
+        assert len(test_service.processed_requests) == 1
+    
+    @pytest.mark.asyncio
+    async def test_process_request_with_custom_response(self):
+        """Test request processing with custom response."""
+        test_service = TestServiceProvider()
+        test_service.set_response("custom_123", {
+            "success": True,
+            "data": {"custom": "response"},
+            "status": "completed"
+        })
+        
+        request_data = {"id": "custom_123", "data": "test_data"}
+        response = await test_service.process_request(request_data)
+        
+        assert response["success"] is True
+        assert response["data"]["custom"] == "response"
+#+end_src
+
+** Development Workflow
+*** Makefile Commands
+#+begin_src makefile
+.PHONY: help install dev run lint test clean
+
+help:
+    @echo "Available commands:"
+    @echo "  install  - Install dependencies"
+    @echo "  dev      - Start development server"
+    @echo "  run      - Start production server"
+    @echo "  lint     - Run linter"
+    @echo "  test     - Run tests"
+    @echo "  clean    - Clean cache files"
+
+install:
+    uv sync --quiet
+    uv run pip install -e ".[dev]"
+
+dev:
+    uv run uvicorn src.web.app:app --reload --host 127.0.0.1 --port 8030
+
+run:
+    uv run uvicorn src.web.app:app --host 127.0.0.1 --port 8030
+
+lint:
+    uv run ruff check --fix --unsafe-fixes .
+
+# IMPORTANT: Always use 'make test' to run tests - never run pytest directly
+# This ensures proper environment setup and dependency management
+test: lint
+    uv run pytest tests/
+
+clean:
+    rm -rf __pycache__ .pytest_cache .ruff_cache htmlcov
+    find . -name __pycache__ -type d -delete
+#+end_src
+
+*** pytest.ini Configuration
+#+begin_src ini
+[tool:pytest]
+testpaths = tests
+python_files = test_*.py
+python_classes = Test*
+python_functions = test_*
+pythonpath = src
+addopts = 
+    -v
+    --tb=short
+    --strict-markers
+    --disable-warnings
+markers =
+    slow: marks tests as slow (deselect with '-m "not slow"')
+    integration: marks tests as integration tests
+    unit: marks tests as unit tests
+#+end_src
+
+** API Design Patterns
+*** FastAPI Application Structure
+#+begin_src python
+# app.py
+from contextlib import asynccontextmanager
+from dotenv import load_dotenv
+from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
+
+from config import get_logger
+from web.errors import (
+    APIError,
+    api_error_handler,
+    create_error_response,
+    general_exception_handler,
+)
+from web.routes import main_router
+
+# Get logger for this module
+logger = get_logger("web.app")
+
+# Load environment variables from .env file at application startup
+load_dotenv()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan manager."""
+    logger.info("Starting application")
+    yield
+    logger.info("Shutting down application")
+
+app = FastAPI(
+    title="Project API",
+    description="API description",
+    version="0.1.0",
+    lifespan=lifespan
+)
+
+# Add global exception handlers
+app.add_exception_handler(APIError, api_error_handler)
+app.add_exception_handler(RequestValidationError, lambda request, exc: create_error_response(
+    "validation_error",
+    "Request validation failed",
+    422,
+    {"details": exc.errors()}
+))
+app.add_exception_handler(Exception, general_exception_handler)
+
+# Include API routes
+app.include_router(main_router)
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8030)
+#+end_src
+
+*** Route Organization
+#+begin_src python
+# routes/__init__.py
+from fastapi import APIRouter
+
+from .service import router as service_router
+from .data import router as data_router
+
+main_router = APIRouter(prefix="/api/v1")
+
+main_router.include_router(service_router, prefix="/service", tags=["service"])
+main_router.include_router(data_router, prefix="/data", tags=["data"])
+#+end_src
+
+*** Route Implementation
+#+begin_src python
+# routes/service.py
+from fastapi import APIRouter, Depends, HTTPException
+from web.models import ServiceRequest, ServiceResponse
+from web.di_container import ServiceDep
+
+router = APIRouter()
+
+@router.post("/process", response_model=ServiceResponse)
+async def process_request(
+    request: ServiceRequest,
+    service: ServiceProtocol = ServiceDep
+) -> ServiceResponse:
+    """Process a service request."""
+    try:
+        result = await service.process_request(request.data)
+        return ServiceResponse(
+            success=True,
+            data=result,
+            status="completed"
+        )
+    except Exception as e:
+        logger.error(f"Service processing failed: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Service processing failed"
+        )
+#+end_src
+
+** Documentation Standards
+*** README Structure
+#+begin_src org
+# Project Name: Brief Description
+
+A comprehensive description of what the project does and its main features.
+
+,* Overview
+- **Feature 1**: Description of feature 1
+- **Feature 2**: Description of feature 2
+- **Feature 3**: Description of feature 3
+
+,* Development Guidelines
+
+,** Testing Rules
+,*** ALWAYS use the Makefile to run tests
+- Use =make test= to run all tests
+- Never run =pytest= directly
+- The Makefile ensures proper environment setup and dependency management
+
+,** Available Makefile Commands
+- =make test= - Run all tests using pytest
+- =make lint= - Run linter with auto-fixes
+- =make install= - Install dependencies
+- =make dev= - Start development server
+- =make clean= - Clean cache files
+
+,* API Endpoints
+,** Core Endpoints
+,*** Service Processing
+- =POST /api/v1/service/process= - Process service requests
+- =GET /api/v1/service/status= - Get service status
+
+,* Configuration
+,** Environment Variables
+,#+begin_src text
+API_HOST=127.0.0.1
+API_PORT=8030
+DEBUG=false
+,#+end_src
+#+end_src
+
+*** Code Documentation
+#+begin_src python
+def process_data(data: dict[str, Any], options: Optional[dict] = None) -> dict[str, Any]:
+    """Process input data according to specified options.
+    
+    Args:
+        data: Input data dictionary containing the data to process
+        options: Optional dictionary containing processing options
+        
+    Returns:
+        Dictionary containing processed data and metadata
+        
+    Raises:
+        ValueError: If data format is invalid
+        ProcessingError: If processing fails
+        
+    Example:
+        >>> data = {"input": "test"}
+        >>> result = process_data(data, {"format": "json"})
+        >>> print(result["output"])
+        "processed_test"
+    """
+    if not isinstance(data, dict):
+        raise ValueError("Data must be a dictionary")
+    
+    # Processing logic here
+    return {"output": "processed_data", "status": "success"}
+#+end_src
+
+** Best Practices Summary
+*** Code Quality
+- Use *Protocols* for dependency injection and testability
+- Implement *structured logging* with JSON formatting
+- Follow *PEP 8* with Ruff for linting
+- Use *type hints* throughout the codebase
+- Implement *comprehensive error handling*
+
+*** Testing
+- Use *test implementations* instead of mocks when possible
+- Implement *dependency injection* for easy testing
+- Create *shared fixtures* in conftest.py
+- Use *pytest markers* for test categorization
+- Always use *make test* for running tests
+
+*** Development Workflow
+- Use *uv* for dependency management
+- Implement *Makefile* for common commands
+- Use *environment variables* for configuration
+- Follow *feature-based* directory organization
+- Implement *comprehensive documentation*
+
+*** API Design
+- Use *Pydantic models* for request/response validation
+- Implement *proper error handling* with custom exceptions
+- Use *dependency injection* for service access
+- Follow *RESTful* API design principles
+- Implement *comprehensive logging* for debugging
+
+*** Security & Performance
+- Use *environment variables* for sensitive configuration
+- Implement *proper input validation*
+- Use *structured logging* for monitoring
+- Implement *timeout handling* for external services
+- Use *connection pooling* for database connections
+
+These guidelines provide a solid foundation for building maintainable,
+testable, and scalable Python applications using modern best practices
+and tools.
