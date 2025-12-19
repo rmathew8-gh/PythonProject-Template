@@ -5,7 +5,7 @@
 [project]
 name = "python_project_template"
 version = "0.1.0"
-requires-python = ">=3.13"
+# requires-python = ">=3.13"
 description = "A starter template for modern Python projects."
 readme = {file = "README.org", content-type = "text/plain"}
 authors = [
