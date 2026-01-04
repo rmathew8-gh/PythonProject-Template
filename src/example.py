@@ -40,9 +40,8 @@ class WordGame:
     def update(self, letter):
         arr = ["_"] * len(self.secret_word)
         for i, g in enumerate(self.secret_word):
-            for ltr in self.guessed_letters:
-                if ltr == g:
-                    arr[i] = g
+            if g in self.guessed_letters:
+                arr[i] = g
         self.current_state = " ".join(arr)
 
     def display(self) -> str:
