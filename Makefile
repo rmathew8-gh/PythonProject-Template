@@ -2,12 +2,13 @@
 
 .PHONY: install run lint test clean real-clean
 
-UV_RUN = env $$(cat .env 2>/dev/null | xargs) uv run --quiet
+# UV_RUN = env $$(cat .env 2>/dev/null | xargs) uv run --quiet
+UV_RUN = uv run
 
 install:
-	uv venv --quiet --clear
+	uv venv
 	uv sync --quiet
-	$(UV_RUN) pip install -e ".[dev]"
+	uv pip install -e ".[dev]"
 
 run:
 	$(UV_RUN) python src/example.py
