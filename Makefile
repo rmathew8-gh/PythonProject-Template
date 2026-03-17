@@ -1,12 +1,20 @@
 # Makefile for Python starter template
 
-.PHONY: install run lint test clean real-clean
+.PHONY: help install run lint test type-check clean real-clean
 
-# UV_RUN = env $$(cat .env 2>/dev/null | xargs) uv run --quiet
 UV_RUN = uv run
 
+help:
+	@echo "Available commands:"
+	@echo "  install     - Install dependencies"
+	@echo "  run         - Run the application"
+	@echo "  lint        - Run linter and formatter"
+	@echo "  test        - Run all tests"
+	@echo "  type-check  - Run type checker (mypy)"
+	@echo "  clean       - Remove cache files"
+	@echo "  real-clean  - Clean + git clean"
+
 install:
-	uv venv
 	uv sync --quiet
 	uv pip install -e ".[dev]"
 
@@ -18,7 +26,10 @@ lint:
 	$(UV_RUN) ruff format .
 
 test: lint
-	$(UV_RUN) pytest tests/
+	$(UV_RUN) pytest tests/ -v
+
+type-check:
+	$(UV_RUN) mypy src/
 
 clean:
 	@find . -type d -name '__pycache__' -exec rm -rf {} + 2>/dev/null || true

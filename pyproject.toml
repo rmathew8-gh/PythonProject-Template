@@ -2,33 +2,46 @@
 # user-level configuration file (e.g., ~/.config/pycodestyle). It does not support the
 # [tool.pycodestyle] section in pyproject.toml.
 
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "python_project_template"
 version = "0.1.0"
-requires-python = ">=3.12"
 description = "A starter template for modern Python projects."
 readme = {file = "README.org", content-type = "text/plain"}
 authors = [
     { name = "Roy Mathew", email = "rmathew8@gmail.com" }
 ]
+requires-python = ">=3.12"
 dependencies = [
-    "pip",
-    "pydantic"
+    "pydantic>=2.0",
 ]
 
 [project.optional-dependencies]
 dev = [
+    "mypy",
     "pytest",
-    "python-lsp-server[all]",
+    "pytest-asyncio",
     "python-lsp-ruff",
-    "ruff"
+    "python-lsp-server[all]",
+    "ruff",
+]
+
+[dependency-groups]
+test = [
+    "pytest>=8.0",
 ]
 
 [tool.uv]
 link-mode = "symlink"
 
 [tool.setuptools.packages.find]
-where = ["src"] 
+where = ["src"]
+
+[tool.setuptools.package-data]
+python_project_template = ["py.typed"]
 
 # Python LSP Server configuration
 [tool.pylsp.plugins]
@@ -36,13 +49,6 @@ mypy = {enabled = true, live_mode = true, strict = false}
 ruff = {enabled = true}
 pyflakes = {enabled = false}
 pycodestyle = {enabled = false}
-
-ignore = [
-    "E501",  # line too long, handled by formatter
-]
-
-fixable = ["ALL"]
-unfixable = []
 
 [tool.ruff]
 line-length = 120
@@ -58,4 +64,12 @@ select = [
     "C4", # flake8-comprehensions
     "UP", # pyupgrade
 ]
-ignore = []          # Ensure E501 is not ignored
+ignore = ["E501"]  # line too long, handled by formatter
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
