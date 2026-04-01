@@ -15,7 +15,8 @@ help:
 	@echo "  real-clean  - Clean + git clean"
 
 install:
-	uv sync --quiet
+	uv sync
+	@#uv sync --quiet
 	uv pip install -e ".[dev]"
 
 run:
