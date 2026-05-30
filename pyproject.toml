@@ -18,6 +18,9 @@ requires-python = ">=3.12"
 dependencies = [
     "pip>=26.0.1",
     "pydantic>=2.0",
+    "rassumfrassum>=0.3.3",
+    "ruff>=0.15.2",
+    "ty>=0.0.40",
 ]
 
 [project.optional-dependencies]
