@@ -35,7 +35,9 @@ type-check:
 cov:
 	coverage run -m pytest
 	coverage report
-	@#coverage html
+
+cov-html:
+	coverage html
 
 clean:
 	@find . -type d -name '__pycache__' -exec rm -rf {} + 2>/dev/null || true
