@@ -11,26 +11,31 @@ This template provides a production-ready foundation for Python projects with:
 - **Linting & Formatting**: `ruff` for fast linting and formatting
 - **Type Checking**: `mypy` for static type analysis
 - **Build System**: `setuptools` for packaging
+- **Runtime Management**: `mise` for Python version management
 
 ## Project Structure
 
 ```
 project_root/
 ├── src/                      # Source code (src layout)
+│   ├── example.py            # Application entry point
 │   └── lib/                  # Feature-based modules
 │       ├── __init__.py
-│       └── compute.py        # Core business logic
+│       └── compute.py        # Core business logic (Pydantic models)
 ├── tests/                    # Test suite
 │   ├── __init__.py
-│   ├── conftest.py          # Shared fixtures
-│   └── test_example.py      # Module tests
-├── docs/                     # Documentation
-├── pyproject.toml           # Project configuration
-├── Makefile                 # Development commands
-├── pytest.ini               # Test configuration
-├── example.env              # Environment template
-├── AGENTS.md                # AI agent guidelines
-└── README.md                # Project documentation
+│   ├── conftest.py           # Shared fixtures
+│   └── test_example.py       # Module tests
+├── docs/
+│   └── cursor-guidelines-fastapi.org  # Development guidelines
+├── pyproject.toml            # Project configuration
+├── Makefile                  # Development commands
+├── pytest.ini                # Test configuration
+├── example.env               # Environment template
+├── mise.toml                 # Python version management
+├── uv.lock                   # Locked dependency versions
+├── AGENTS.md                 # AI agent guidelines
+└── README.md                 # Project documentation
 ```
 
 ## Getting Started
@@ -90,6 +95,14 @@ make clean      # Remove cache files
 make real-clean # Clean + git clean (deletes untracked files)
 ```
 
+### Coverage
+
+```bash
+make cov
+```
+
+This runs `coverage run -m pytest` followed by a coverage report.
+
 ## Configuration
 
 ### Environment Variables
@@ -133,4 +146,4 @@ See `pyproject.toml` for:
 
 ## License
 
-MIT License - see LICENSE file for details.
+MIT License
