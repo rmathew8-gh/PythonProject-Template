@@ -2,7 +2,20 @@
 
 from __future__ import annotations
 
+import os
+import sys
+
+from dotenv import load_dotenv
 from pydantic import BaseModel, ConfigDict
+
+
+def load_environment() -> None:
+    """Load environment variables from .env file and verify DATABASE_URL is set."""
+    load_dotenv()
+
+    if not os.getenv("DATABASE_URL"):
+        print("Error: DATABASE_URL is not set. Ensure a .env file is present.", file=sys.stderr)
+        sys.exit(1)
 
 
 class AddRequest(BaseModel):
@@ -33,4 +46,6 @@ def add(req: AddRequest) -> int:
         >>> add(req)
         5
     """
+    load_environment()
+
     return req.a + req.b

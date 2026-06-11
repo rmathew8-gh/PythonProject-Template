@@ -8,3 +8,4 @@ uv.lock
 /tests/__pycache__/ 
 /.DS_Store
 /.coverage
+/.env
