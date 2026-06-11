@@ -7,3 +7,4 @@ uv.lock
 /.ruff_cache/
 /tests/__pycache__/ 
 /.DS_Store
+/.coverage

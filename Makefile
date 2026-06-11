@@ -32,6 +32,11 @@ test: lint
 type-check:
 	$(UV_RUN) mypy src/
 
+cov:
+	coverage run -m pytest
+	coverage report
+	@#coverage html
+
 clean:
 	@find . -type d -name '__pycache__' -exec rm -rf {} + 2>/dev/null || true
 	@find . -type d -name '*.egg-info' -exec rm -rf {} + 2>/dev/null || true
