@@ -41,7 +41,8 @@ test = [
 ]
 
 [tool.uv]
-link-mode = "symlink"
+link-mode = "copy"
+# link-mode = "symlink"
 
 [tool.setuptools.packages.find]
 where = ["src"]
