@@ -1,0 +1,11 @@
+#+setupfile: ~/.org-mode-goodies/setup.org
+
+* client (sync)
+#+begin_src python :session py :results silent
+  # sync code here
+#+end_src
+
+* server (async)
+#+begin_src python :session py-recv :results silent :async yes
+  # async code here
+#+end_src
