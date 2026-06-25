@@ -16,11 +16,10 @@ help:
 
 install:
 	uv sync
-	@#uv sync --quiet
 	uv pip install -e ".[dev]"
 
 run:
-	$(UV_RUN) python src/example.py
+	$(UV_RUN) python -m example
 
 lint:
 	$(UV_RUN) ruff check --unsafe-fixes --fix .
