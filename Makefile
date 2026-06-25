@@ -47,5 +47,5 @@ clean:
 	@find . -type f -name '*.pyc' -delete 2>/dev/null || true
 	@rm -rf build/ dist/ *.egg 2>/dev/null || true
 
-real-clean: clean
+real-clean:
 	git clean -fdx
